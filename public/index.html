@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Feedback Collector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .feedback-form-section {
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+    .feedback-form-section.hidden {
+      display: none;
+    }
+    .rating-stars:hover .star {
+      color: #d1d5db; /* Default gray */
+    }
+    .rating-stars .star {
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    .rating-stars .star.active {
+      color: #fbbf24; /* Yellow when active */
+    }
+    .rating-stars .star:hover ~ .star {
+      color: #d1d5db; /* Gray after hover */
+    }
+    .rating-stars:hover .star:hover,
+    .rating-stars:hover .star:hover ~ .star.active {
+      color: #fbbf24; /* Yellow on hover */
+    }
+
+    .code-block {
+      font-family: monospace;
+      white-space: pre-wrap;
+      background-color: #f0f0f0;
+      padding: 1rem;
+      border-radius: 0.25rem;
+      overflow-x: auto;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-blue-600 text-white py-6">
+    <div class="container mx-auto px-4">
+      <h1 class="text-3xl font-bold">Community Feedback Portal</h1>
+      <p class="mt-2">Help us improve by sharing your thoughts and suggestions</p>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8 max-w-3xl">
+    <!-- Progress bar -->
+    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+      <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 25%"></div>
+    </div>
+    
+    <!-- Form container -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <form id="feedback-form" class="space-y-6">
+        <!-- Step 1: Basic Info -->
+        <section id="step-1" class="feedback-form-section">
+          <h2 class="text-xl font-semibold mb-4 text-gray-800">Tell us about yourself</h2>
+          <div class="space-y-4">
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name (Optional)</label>
+              <input type="text" id="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+              <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <p class="text-xs text-gray-500 mt-1">We'll only use this to follow up if needed</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">How do you interact with our community?</label>
+              <select id="user-type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" disabled selected>Please select an option</option>
+                <option value="new-member">New member (< 3 months)</option>
+                <option value="regular-member">Regular member (3-12 months)</option>
+                <option value="long-term-member">Long-term member (> 1 year)</option>
+                <option value="volunteer">Volunteer/Moderator</option>
+                <option value="visitor">Occasional visitor</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end">
+            <button type="button" onclick="nextStep(1)" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Next
+            </button>
+          </div>
+        </section>
+        
+        <!-- Step 2: Satisfaction -->
+        <section id="step-2" class="feedback-form-section hidden">
+          <h2 class="text-xl font-semibold mb-4 text-gray-800">Rate your experience</h2>
+          
+          <div class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">Overall satisfaction with our community</label>
+              <div id="satisfaction-rating" class="rating-stars flex space-x-2">
+                <span class="star text-3xl" data-value="1">★</span>
+                <span class="star text-3xl" data-value="2">★</span>
+                <span class="star text-3xl" data-value="3">★</span>
+                <span class="star text-3xl" data-value="4">★</span>
+                <span class="star text-3xl" data-value="5">★</span>
+              </div>
+              <input type="hidden" id="satisfaction-score" value="0">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Please rate the following aspects:</label>
+              
+              <div class="space-y-4 mt-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm">Community responsiveness</span>
+                  <div class="flex space-x-2">
+                    <label class="flex items-center">
+                      <input type="radio" name="responsiveness" value="1" class="mr-1">
+                      <span class="text-sm">1</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="responsiveness" value="2" class="mr-1">
+                      <span class="text-sm">2</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="responsiveness" value="3" class="mr-1">
+                      <span class="text-sm">3</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="responsiveness" value="4" class="mr-1">
+                      <span class="text-sm">4</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="responsiveness" value="5" class="mr-1">
+                      <span class="text-sm">5</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <span class="text-sm">Quality of discussions</span>
+                  <div class="flex space-x-2">
+                    <label class="flex items-center">
+                      <input type="radio" name="quality" value="1" class="mr-1">
+                      <span class="text-sm">1</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="quality" value="2" class="mr-1">
+                      <span class="text-sm">2</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="quality" value="3" class="mr-1">
+                      <span class="text-sm">3</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="quality" value="4" class="mr-1">
+                      <span class="text-sm">4</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="quality" value="5" class="mr-1">
+                      <span class="text-sm">5</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                  <span class="text-sm">Moderation effectiveness</span>
+                  <div class="flex space-x-2">
+                    <label class="flex items-center">
+                      <input type="radio" name="moderation" value="1" class="mr-1">
+                      <span class="text-sm">1</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="moderation" value="2" class="mr-1">
+                      <span class="text-sm">2</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="moderation" value="3" class="mr-1">
+                      <span class="text-sm">3</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="moderation" value="4" class="mr-1">
+                      <span class="text-sm">4</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="radio" name="moderation" value="5" class="mr-1">
+                      <span class="text-sm">5</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-between">
+            <button type="button" onclick="prevStep(2)" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Previous
+            </button>
+            <button type="button" onclick="nextStep(2)" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Next
+            </button>
+          </div>
+        </section>
+        
+        <!-- Step 3: Detailed Feedback -->
+        <section id="step-3" class="feedback-form-section hidden">
+          <h2 class="text-xl font-semibold mb-4 text-gray-800">Share your thoughts</h2>
+          
+          <div class="space-y-5">
+            <div>
+              <label for="improvements" class="block text-sm font-medium text-gray-700 mb-1">What could we improve?</label>
+              <textarea id="improvements" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            
+            <div>
+              <label for="likes" class="block text-sm font-medium text-gray-700 mb-1">What do you like most about our community?</label>
+              <textarea id="likes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            
+            <div>
+              <label for="suggestions" class="block text-sm font-medium text-gray-700 mb-1">Do you have any specific suggestions or ideas?</label>
+              <textarea id="suggestions" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Which topics would you like to see more of?</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center">
+                  <input type="checkbox" name="topics" value="tutorials" class="mr-2">
+                  <span>Tutorials</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" name="topics" value="discussions" class="mr-2">
+                  <span>Open discussions</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" name="topics" value="events" class="mr-2">
+                  <span>Events</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" name="topics" value="resources" class="mr-2">
+                  <span>Resources sharing</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" name="topics" value="q-and-a" class="mr-2">
+                  <span>Q&A sessions</span>
+                </label>
+                <label class="flex items-center">
+                  <input type="checkbox" name="topics" value="showcases" class="mr-2">
+                  <span>Project showcases</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-between">
+            <button type="button" onclick="prevStep(3)" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Previous
+            </button>
+            <button type="button" onclick="nextStep(3)" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Next
+            </button>
+          </div>
+        </section>
+        
+        <!-- Step 4: Submit -->
+        <section id="step-4" class="feedback-form-section hidden">
+          <h2 class="text-xl font-semibold mb-4 text-gray-800">Finalize your feedback</h2>
+          
+          <div class="space-y-4">
+            <div class="p-4 bg-gray-50 rounded-lg">
+              <p class="text-sm text-gray-600">Thank you for taking the time to share your feedback! Your input helps us make our community better for everyone.</p>
+            </div>
+            
+            <div class="flex items-center">
+              <input type="checkbox" id="contact-permission" class="mr-2">
+              <label for="contact-permission" class="text-sm text-gray-700">It's okay to contact me about my feedback</label>
+            </div>
+            
+            <div class="flex items-center">
+              <input type="checkbox" id="anonymous" class="mr-2">
+              <label for="anonymous" class="text-sm text-gray-700">Submit my feedback anonymously</label>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-between">
+            <button type="button" onclick="prevStep(4)" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Previous
+            </button>
+            <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
+              Submit Feedback
+            </button>
+          </div>
+        </section>
+        
+        <!-- Success Message (initially hidden) -->
+        <section id="success-message" class="hidden">
+          <div class="text-center py-8">
+            <svg class="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <h2 class="mt-4 text-2xl font-semibold text-gray-800">Thank you for your feedback!</h2>
+            <p class="mt-2 text-gray-600">Your input will help us improve our community experience.</p>
+            <button type="button" onclick="resetForm()" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Submit Another Response
+            </button>
+          </div>
+        </section>
+      </form>
+    </div>
+  </main>
+  
+  <footer class="bg-gray-100 py-6 mt-12">
+    <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
+      <p>© 2025 Community Feedback Portal. Your privacy and feedback are important to us.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Current step tracker
+    let currentStep = 1;
+    const totalSteps = 4;
+    
+    // Handle star rating system
+    const stars = document.querySelectorAll('.rating-stars .star');
+    let selectedRating = 0;
+    
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        const value = parseInt(star.getAttribute('data-value'));
+        document.getElementById('satisfaction-score').value = value;
+        selectedRating = value;
+        
+        // Update stars display
+        stars.forEach(s => {
+          const starValue = parseInt(s.getAttribute('data-value'));
+          if (starValue <= selectedRating) {
+            s.classList.add('active');
+          } else {
+            s.classList.remove('active');
+          }
+        });
+      });
+    });
+    
+    // Navigation functions
+    function nextStep(step) {
+      // Simple validation
+      if (step === 1) {
+        const userType = document.getElementById('user-type').value;
+        if (!userType) {
+          alert('Please select how you interact with our community');
+          return;
+        }
+      }
+      
+      if (step === 2) {
+        const satisfactionScore = document.getElementById('satisfaction-score').value;
+        if (satisfactionScore === '0') {
+          alert('Please rate your overall satisfaction');
+          return;
+        }
+      }
+      
+      // Hide current step
+      document.getElementById(`step-${step}`).classList.add('hidden');
+      
+      // Show next step
+      document.getElementById(`step-${step + 1}`).classList.remove('hidden');
+      
+      // Update current step
+      currentStep = step + 1;
+      
+      // Update progress bar
+      updateProgressBar();
+    }
+    
+    function prevStep(step) {
+      // Hide current step
+      document.getElementById(`step-${step}`).classList.add('hidden');
+      
+      // Show previous step
+      document.getElementById(`step-${step - 1}`).classList.remove('hidden');
+      
+      // Update current step
+      currentStep = step - 1;
+      
+      // Update progress bar
+      updateProgressBar();
+    }
+    
+    function updateProgressBar() {
+      const progressPercentage = (currentStep / totalSteps) * 100;
+      document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+    }
+    
+    // Form submission
+// Update the form submission handler in your script section
+document.getElementById('feedback-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  console.log('Submitting feedback form...');
+  
+  // Get selected topics
+  const selectedTopics = [];
+  document.querySelectorAll('input[name="topics"]:checked').forEach(checkbox => {
+    selectedTopics.push(checkbox.value);
+  });
+  
+  // Get ratings for different aspects
+  const responsiveness = document.querySelector('input[name="responsiveness"]:checked')?.value || 0;
+  const quality = document.querySelector('input[name="quality"]:checked')?.value || 0;
+  const moderation = document.querySelector('input[name="moderation"]:checked')?.value || 0;
+  
+  // Collect form data
+  const formData = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    userType: document.getElementById('user-type').value,
+    satisfactionScore: parseInt(document.getElementById('satisfaction-score').value),
+    responsiveness: parseInt(responsiveness),
+    quality: parseInt(quality),
+    moderation: parseInt(moderation),
+    improvements: document.getElementById('improvements').value,
+    likes: document.getElementById('likes').value,
+    suggestions: document.getElementById('suggestions').value,
+    topics: selectedTopics,
+    contactPermission: document.getElementById('contact-permission').checked,
+    anonymous: document.getElementById('anonymous').checked
+  };
+  
+  console.log('Form data collected:', formData);
+  
+  try {
+    // Show loading state
+    const submitButton = document.querySelector('button[type="submit"]');
+    submitButton.textContent = 'Submitting...';
+    submitButton.disabled = true;
+    
+    console.log('Sending data to server...');
+    
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    // Reset button state
+    submitButton.textContent = 'Submit Feedback';
+    submitButton.disabled = false;
+    
+    console.log('Server response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    console.log('Server response:', result);
+    
+    if (result.success) {
+      console.log('Feedback submitted successfully!');
+      
+      // Show success message
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`step-${i}`).classList.add('hidden');
+      }
+      
+      // Show the success message section
+      const successMessage = document.getElementById('success-message');
+      successMessage.classList.remove('hidden');
+      
+      // Clear any previous AI response
+      const existingResponse = successMessage.querySelector('.ai-response-section');
+      if (existingResponse) {
+        existingResponse.remove();
+      }
+      
+      // Add the AI response if available
+      if (result.data && result.data.autoResponse) {
+        console.log('%c=== GEMINI RESPONSE ===', 'background: #e2f2ff; color: #0050a0; font-weight: bold');
+        console.log('Category:', result.data.category);
+        console.log('Response:', result.data.autoResponse);
+        console.log('%c=== END GEMINI RESPONSE ===', 'background: #e2f2ff; color: #0050a0; font-weight: bold');
+        
+        // Create the AI response section with a specific class name
+        const aiResponseDiv = document.createElement('div');
+        aiResponseDiv.className = 'mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left ai-response-section';
+        
+        // Add category if available
+        if (result.data.category) {
+          const categoryTag = document.createElement('div');
+          categoryTag.className = 'inline-block px-2 py-1 mb-3 text-xs font-medium rounded-full bg-blue-100 text-blue-800';
+          categoryTag.textContent = `Category: ${result.data.category}`;
+          aiResponseDiv.appendChild(categoryTag);
+        }
+        
+        // Add the response message
+        const responseText = document.createElement('p');
+        responseText.className = 'text-gray-700';
+        responseText.textContent = result.data.autoResponse;
+        aiResponseDiv.appendChild(responseText);
+        
+        // Append the AI response to the success message section
+        successMessage.appendChild(aiResponseDiv);
+        
+        // Make sure the button remains at the bottom
+        const submitAnotherButton = successMessage.querySelector('button');
+        if (submitAnotherButton) {
+          successMessage.appendChild(submitAnotherButton);
+        }
+      } else {
+        console.warn('No AI response received from server');
+      }
+    } else {
+      console.error('Server reported an error:', result.message);
+      alert(result.message || 'There was an error submitting your feedback. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert(`Error submitting feedback: ${error.message}`);
+  }
+});
+
+// Also update the resetForm function to properly handle AI responses
+function resetForm() {
+  // Reset the form
+  document.getElementById('feedback-form').reset();
+  
+  // Reset star ratings
+  document.querySelectorAll('.rating-stars .star').forEach(star => {
+    star.classList.remove('active');
+  });
+  document.getElementById('satisfaction-score').value = 0;
+  
+  // Hide success message
+  const successMessage = document.getElementById('success-message');
+  successMessage.classList.add('hidden');
+  
+  // Remove any previous AI response
+  const aiResponseDiv = successMessage.querySelector('.ai-response-section');
+  if (aiResponseDiv) {
+    aiResponseDiv.remove();
+  }
+  
+  // Show first step
+  document.getElementById('step-1').classList.remove('hidden');
+  
+  // Reset current step
+  currentStep = 1;
+  
+  // Update progress bar
+  updateProgressBar();
+}
+
+  // In your HTML file, this is already implemented correctly with the form submission handler
+// The key part handling the AI response is here:
+if (result.data && result.data.autoResponse) {
+  // Create the AI response section
+  const aiResponseDiv = document.createElement('div');
+  aiResponseDiv.className = 'mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left';
+  
+  // Add category if available
+  if (result.data.category) {
+    const categoryTag = document.createElement('div');
+    categoryTag.className = 'inline-block px-2 py-1 mb-3 text-xs font-medium rounded-full bg-blue-100 text-blue-800';
+    categoryTag.textContent = `Category: ${result.data.category}`;
+    aiResponseDiv.appendChild(categoryTag);
+  }
+  
+  // Add the response message
+  const responseText = document.createElement('p');
+  responseText.className = 'text-gray-700';
+  responseText.textContent = result.data.autoResponse;
+  aiResponseDiv.appendChild(responseText);
+  
+  // Insert the AI response before the "Submit Another Response" button
+  const submitAnotherButton = successMessage.querySelector('button');
+  successMessage.insertBefore(aiResponseDiv, submitAnotherButton);
+}
+
+
+async function testGeminiAPI() {
+  console.log('Testing Gemini API connection...');
+  
+  try {
+    const response = await fetch('/api/test-gemini-detailed');
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('%c✅ Gemini API Test Successful', 'color: green; font-weight: bold');
+      console.log('Response:', data.response);
+      console.log('Full details:', data);
+    } else {
+      console.error('%c❌ Gemini API Test Failed', 'color: red; font-weight: bold');
+      console.error('Error:', data.message);
+      console.error('Details:', data);
+      
+      // Display an error message on the page
+      const errorBanner = document.createElement('div');
+      errorBanner.className = 'p-4 bg-red-100 border border-red-400 text-red-700 mb-4 rounded';
+      errorBanner.innerHTML = `<strong>API Error:</strong> ${data.message}`;
+      
+      const formContainer = document.querySelector('.bg-white.rounded-lg');
+      formContainer.prepend(errorBanner);
+    }
+  } catch (error) {
+    console.error('%c❌ Gemini API Test Failed', 'color: red; font-weight: bold');
+    console.error('Error:', error.message);
+    
+    // Display a connection error message on the page
+    const errorBanner = document.createElement('div');
+    errorBanner.className = 'p-4 bg-red-100 border border-red-400 text-red-700 mb-4 rounded';
+    errorBanner.innerHTML = `<strong>Connection Error:</strong> Could not connect to the API server`;
+    
+    const formContainer = document.querySelector('.bg-white.rounded-lg');
+    formContainer.prepend(errorBanner);
+  }
+}
+
+// Enhanced form submission with detailed console logging
+document.getElementById('feedback-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  console.log('Submitting feedback form...');
+  
+  // Get selected topics
+  const selectedTopics = [];
+  document.querySelectorAll('input[name="topics"]:checked').forEach(checkbox => {
+    selectedTopics.push(checkbox.value);
+  });
+  
+  // Get ratings for different aspects
+  const responsiveness = document.querySelector('input[name="responsiveness"]:checked')?.value || 0;
+  const quality = document.querySelector('input[name="quality"]:checked')?.value || 0;
+  const moderation = document.querySelector('input[name="moderation"]:checked')?.value || 0;
+  
+  // Collect form data
+  const formData = {
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    userType: document.getElementById('user-type').value,
+    satisfactionScore: parseInt(document.getElementById('satisfaction-score').value),
+    responsiveness: parseInt(responsiveness),
+    quality: parseInt(quality),
+    moderation: parseInt(moderation),
+    improvements: document.getElementById('improvements').value,
+    likes: document.getElementById('likes').value,
+    suggestions: document.getElementById('suggestions').value,
+    topics: selectedTopics,
+    contactPermission: document.getElementById('contact-permission').checked,
+    anonymous: document.getElementById('anonymous').checked
+  };
+  
+  console.log('Form data collected:', formData);
+  
+  try {
+    // Show loading state
+    const submitButton = document.querySelector('button[type="submit"]');
+    submitButton.textContent = 'Submitting...';
+    submitButton.disabled = true;
+    
+    console.log('Sending data to server...');
+    
+    const response = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
+    
+    // Reset button state
+    submitButton.textContent = 'Submit Feedback';
+    submitButton.disabled = false;
+    
+    console.log('Server response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    console.log('Server response:', result);
+    
+    if (result.success) {
+      console.log('Feedback submitted successfully!');
+      
+      // Show success message
+      for (let i = 1; i <= totalSteps; i++) {
+        document.getElementById(`step-${i}`).classList.add('hidden');
+      }
+      
+      // Modify the success message to include the AI response
+      const successMessage = document.getElementById('success-message');
+      successMessage.classList.remove('hidden');
+      
+      // Add the AI response if available
+      if (result.data && result.data.autoResponse) {
+        console.log('%c=== GEMINI RESPONSE ===', 'background: #e2f2ff; color: #0050a0; font-weight: bold');
+        console.log('Category:', result.data.category);
+        console.log('Response:', result.data.autoResponse);
+        console.log('%c=== END GEMINI RESPONSE ===', 'background: #e2f2ff; color: #0050a0; font-weight: bold');
+        
+        // Create the AI response section
+        const aiResponseDiv = document.createElement('div');
+        aiResponseDiv.className = 'mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left';
+        
+        // Add category if available
+        if (result.data.category) {
+          const categoryTag = document.createElement('div');
+          categoryTag.className = 'inline-block px-2 py-1 mb-3 text-xs font-medium rounded-full bg-blue-100 text-blue-800';
+          categoryTag.textContent = `Category: ${result.data.category}`;
+          aiResponseDiv.appendChild(categoryTag);
+        }
+        
+        // Add the response message
+        const responseText = document.createElement('p');
+        responseText.className = 'text-gray-700';
+        responseText.textContent = result.data.autoResponse;
+        aiResponseDiv.appendChild(responseText);
+        
+        // Insert the AI response before the "Submit Another Response" button
+        const submitAnotherButton = successMessage.querySelector('button');
+        successMessage.insertBefore(aiResponseDiv, submitAnotherButton);
+      } else {
+        console.warn('No AI response received from server');
+      }
+    } else {
+      console.error('Server reported an error:', result.message);
+      alert(result.message || 'There was an error submitting your feedback. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert('There was an error connecting to the server. Please try again later.');
+  }
+});
+
+// Run the API test when the page loads
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('Page loaded, testing Gemini API...');
+  // Uncomment this line to test the API on page load
+  // testGeminiAPI();
+  
+  // Add a hidden test button that can be revealed through console
+  const testButton = document.createElement('button');
+  testButton.id = 'test-gemini-api';
+  testButton.className = 'hidden px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700';
+  testButton.textContent = 'Test Gemini API';
+  testButton.onclick = testGeminiAPI;
+  
+  document.body.appendChild(testButton);
+  
+  console.log('To test the Gemini API, run this command in console:');
+  console.log('document.getElementById("test-gemini-api").click()');
+});
+  </script>
+</body>
+</html>
